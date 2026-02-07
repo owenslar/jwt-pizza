@@ -3,37 +3,57 @@ import type { Page } from '@playwright/test';
 
 async function mockLogin(page: Page) {
   await page.route('*/**/api/auth', async (route) => {
-    const loginReq = { email: 'bob@gmail.com', password: 'monkeypie' };
-    const loginRes = {
-      user: {
-        id: 3,
-        name: 'bob',
-        email: 'bob@gmail.com',
-        roles: [{ role: 'diner' }],
-      },
-      token: 'abcdef',
-    };
-    expect(route.request().method()).toBe('PUT');
-    expect(route.request().postDataJSON()).toMatchObject(loginReq);
-    await route.fulfill({ json: loginRes });
+    if (route.request().method() === 'PUT') {
+      const loginReq = { email: 'bob@gmail.com', password: 'monkeypie' };
+      const loginRes = {
+        user: {
+          id: 3,
+          name: 'bob',
+          email: 'bob@gmail.com',
+          roles: [{ role: 'diner' }],
+        },
+        token: 'abcdef',
+      };
+      expect(route.request().postDataJSON()).toMatchObject(loginReq);
+      await route.fulfill({ json: loginRes });
+    } else {
+      await route.fallback();
+    }
   });
 }
 
 async function mockRegister(page: Page, name = 'bob joe', email = 'bob@gmail.com', password = 'monkeypie') {
   await page.route('*/**/api/auth', async (route) => {
-    const loginReq = { name, email, password };
-    const loginRes = {
-      user: {
-        id: 3,
-        name: name,
-        email: email,
-        roles: [{ role: 'diner' }],
-      },
-      token: 'abcdef',
-    };
-    expect(route.request().method()).toBe('POST');
-    expect(route.request().postDataJSON()).toMatchObject(loginReq);
-    await route.fulfill({ json: loginRes });
+    if (route.request().method() === 'POST') {
+      const loginReq = { name, email, password };
+      const loginRes = {
+        user: {
+          id: 3,
+          name: name,
+          email: email,
+          roles: [{ role: 'diner' }],
+        },
+        token: 'abcdef',
+      };
+      expect(route.request().postDataJSON()).toMatchObject(loginReq);
+      await route.fulfill({ json: loginRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+async function mockLogout(page: Page) {
+  await page.route('*/**/api/auth', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      const loginRes = {
+        message: "logout successful",
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: loginRes });
+    } else {
+      await route.fallback();
+    }
   });
 }
 
@@ -80,4 +100,20 @@ test('login', async ({ page }) => {
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('link', { name: 'b', exact: true }).click();
   await page.getByText('bob@gmail.com').click();
+});
+
+test('logout', async ({ page }) => {
+  await mockLogin(page);
+  await mockLogout(page);
+
+  await page.goto('http://localhost:5173/');
+
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('bob@gmail.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('monkeypie');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Register' })).toBeVisible();
 });
