@@ -136,3 +136,36 @@ export async function mockCreateOrder(page: Page) {
     }
   });
 }
+
+export async function mockVerifyOrder(page: Page) {
+  await page.route('*/**/api/order/verify', async (route) => {
+    if (route.request().method() === 'POST') {
+      const verifyRes = {
+        message: 'valid',
+        payload: {
+          vendor: {
+            id: 'jwt-pizza',
+            name: 'JWT Pizza',
+          },
+          diner: {
+            id: 3,
+            name: 'bob joe',
+            email: 'bob@gmail.com',
+          },
+          order: {
+            items: [
+              { description: 'Veggie', price: 0.0038 },
+              { description: 'Pepperoni', price: 0.0042 },
+            ],
+            storeId: '1',
+            franchiseId: 1,
+            id: 1,
+          },
+        },
+      };
+      await route.fulfill({ json: verifyRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}

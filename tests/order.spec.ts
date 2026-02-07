@@ -1,5 +1,5 @@
 import { test, expect } from 'playwright-test-coverage';
-import { mockGetMenu, mockGetFranchises, mockLogin, mockGetUser, mockCreateOrder } from './helperMocks';
+import { mockGetMenu, mockGetFranchises, mockLogin, mockGetUser, mockCreateOrder, mockVerifyOrder } from './helperMocks';
 
 test('view menu as guest', async ({ page }) => {
   await mockGetMenu(page);
@@ -117,4 +117,45 @@ test('cancel order', async ({ page }) => {
   
   // Should be back on menu page
   await expect(page.getByText('Awesome is a click away')).toBeVisible();
+});
+
+test('verify order after purchase', async ({ page }) => {
+  await mockLogin(page);
+  await mockGetUser(page);
+  await mockGetMenu(page);
+  await mockGetFranchises(page);
+  await mockCreateOrder(page);
+  await mockVerifyOrder(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login first
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('bob@gmail.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('monkeypie');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to menu
+  await page.getByRole('link', { name: 'Order' }).click();
+  
+  // Select a store
+  await page.locator('select').selectOption({ index: 1 });
+  
+  // Add pizza
+  await page.getByRole('button', { name: 'Veggie' }).click();
+  
+  // Go to checkout
+  await page.getByRole('button', { name: 'Checkout' }).click();
+  
+  // Complete payment
+  await page.getByRole('button', { name: 'Pay now' }).click();
+  
+  // Now on delivery page - click verify button
+  await page.getByRole('button', { name: 'Verify' }).click();
+  
+  // Check that verification modal appears with valid message
+
+  await expect(page.getByRole('heading', { name: 'JWT Pizza - valid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Close' })).toBeVisible();
+  await expect(page.getByText('valid')).toBeVisible();
 });
