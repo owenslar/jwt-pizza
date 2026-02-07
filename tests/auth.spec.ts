@@ -1,7 +1,7 @@
 import { test, expect } from 'playwright-test-coverage';
 import type { Page } from '@playwright/test';
 
-async function mockLogin(page: Page, email = 'bob@gmail.com', password = 'monkeypie', admin = false) {
+async function mockLogin(page: Page, email = 'bob@gmail.com', password = 'monkeypie', role = 'diner') {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'PUT') {
       const loginReq = { email, password };
@@ -10,7 +10,7 @@ async function mockLogin(page: Page, email = 'bob@gmail.com', password = 'monkey
           id: 3,
           name: 'bob joe',
           email,
-          roles: [{ role: admin ? 'admin' : 'diner' }],
+          roles: [{ role }],
         },
         token: 'abcdef',
       };
@@ -22,7 +22,7 @@ async function mockLogin(page: Page, email = 'bob@gmail.com', password = 'monkey
   });
 }
 
-async function mockRegister(page: Page, name = 'bob joe', email = 'bob@gmail.com', password = 'monkeypie') {
+async function mockRegister(page: Page, name = 'bob joe', email = 'bob@gmail.com', password = 'monkeypie', role = 'diner') {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'POST') {
       const loginReq = { name, email, password };
@@ -31,7 +31,7 @@ async function mockRegister(page: Page, name = 'bob joe', email = 'bob@gmail.com
           id: 3,
           name: name,
           email: email,
-          roles: [{ role: 'diner' }],
+          roles: [{ role }],
         },
         token: 'abcdef',
       };
@@ -103,7 +103,7 @@ test('login', async ({ page }) => {
 });
 
 test('login as admin', async ({ page }) => {
-  await mockLogin(page, 'a@jwt.com', 'admin', true);
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
 
   await page.goto('http://localhost:5173/');
   await page.getByRole('link', { name: 'Login' }).click();
