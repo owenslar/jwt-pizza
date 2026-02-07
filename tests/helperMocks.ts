@@ -98,3 +98,41 @@ export async function mockGetFranchises(page: Page) {
     }
   });
 }
+
+export async function mockGetUser(page: Page) {
+  await page.route('*/**/api/user/me', async (route) => {
+    if (route.request().method() === 'GET') {
+      const userRes = {
+        id: 3,
+        name: 'bob joe',
+        email: 'bob@gmail.com',
+        roles: [{ role: 'diner' }],
+      };
+      await route.fulfill({ json: userRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+export async function mockCreateOrder(page: Page) {
+  await page.route('*/**/api/order', async (route) => {
+    if (route.request().method() === 'POST') {
+      const orderReq = route.request().postDataJSON();
+      const orderRes = {
+        order: {
+          id: 1,
+          franchiseId: orderReq.franchiseId,
+          storeId: orderReq.storeId,
+          date: '2024-06-05T05:14:40.000Z',
+          items: orderReq.items,
+        },
+        jwt: 'eyJpYXQ',
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: orderRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
