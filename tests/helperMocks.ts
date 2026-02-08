@@ -218,3 +218,31 @@ export async function mockGetFranchise(page: Page, userId: number = 3) {
     }
   });
 }
+
+export async function mockCreateStore(page: Page) {
+  await page.route('*/**/api/franchise/*/store', async (route) => {
+    if (route.request().method() === 'POST') {
+      const storeReq = route.request().postDataJSON();
+      const storeRes = {
+        id: 200,
+        name: storeReq.name,
+        totalRevenue: 0,
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: storeRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+export async function mockCloseStore(page: Page) {
+  await page.route('*/**/api/franchise/*/store/*', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: { message: 'store closed' } });
+    } else {
+      await route.fallback();
+    }
+  });
+}
