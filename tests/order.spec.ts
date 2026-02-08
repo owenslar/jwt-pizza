@@ -1,5 +1,5 @@
 import { test, expect } from 'playwright-test-coverage';
-import { mockGetMenu, mockGetFranchises, mockLogin, mockGetUser, mockCreateOrder, mockVerifyOrder } from './helperMocks';
+import { mockGetMenu, mockGetFranchises, mockLogin, mockGetUser, mockCreateOrder, mockVerifyOrder, mockGetOrders } from './helperMocks';
 
 test('view menu as guest', async ({ page }) => {
   await mockGetMenu(page);
@@ -158,4 +158,29 @@ test('verify order after purchase', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'JWT Pizza - valid' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Close' })).toBeVisible();
   await expect(page.getByText('valid')).toBeVisible();
+});
+
+test('view order history', async ({ page }) => {
+  await mockLogin(page);
+  await mockGetOrders(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('bob@gmail.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('monkeypie');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to profile/dashboard
+  await page.getByRole('link', { name: 'bj', exact: true }).click();
+  
+  // Verify order history is visible
+
+  await expect(page.getByText('Here is your history of all')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'ID' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Price' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Date' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '2024-06-05T05:14:40.000Z' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '0.008 ₿' })).toBeVisible();
 });

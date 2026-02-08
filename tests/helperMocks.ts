@@ -169,3 +169,30 @@ export async function mockVerifyOrder(page: Page) {
     }
   });
 }
+
+export async function mockGetOrders(page: Page) {
+  await page.route('*/**/api/order', async (route) => {
+    if (route.request().method() === 'GET') {
+      const ordersRes = {
+        dinerId: 3,
+        orders: [
+          {
+            id: 1,
+            franchiseId: 1,
+            storeId: 1,
+            date: '2024-06-05T05:14:40.000Z',
+            items: [
+              { id: 1, menuId: 1, description: 'Veggie', price: 0.0038 },
+              { id: 2, menuId: 2, description: 'Pepperoni', price: 0.0042 },
+            ],
+          },
+        ],
+        page: 1,
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: ordersRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
