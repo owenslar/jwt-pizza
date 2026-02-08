@@ -3,7 +3,8 @@ import {
   mockLogin, 
   mockGetFranchise,
   mockCreateStore,
-  mockCloseStore
+  mockCloseStore,
+  mockGetAllFranchises,
 } from './helperMocks';
 
 test('view franchise as diner with no franchise', async ({ page }) => {
@@ -107,4 +108,36 @@ test('close store as franchisee', async ({ page }) => {
   
   // Should navigate back to franchise dashboard
   await expect(page.getByRole('heading', { name: 'pizzaPocket' })).toBeVisible();
+});
+
+test('view admin dashboard', async ({ page }) => {
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
+  await mockGetAllFranchises(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to admin page
+  await page.getByRole('link', { name: 'Admin' }).first().click();
+  
+  // Should see admin dashboard title
+  await expect(page.getByRole('heading', { name: 'Mama Ricci\'s kitchen' })).toBeVisible();
+  
+  // Should see franchises
+  await expect(page.getByText('pizzaPocket')).toBeVisible();
+  await expect(page.getByText('LotaPizza')).toBeVisible();
+  
+  // Should see franchisees
+  await expect(page.getByText('pizza franchisee')).toBeVisible();
+  await expect(page.getByText('lot franchisee')).toBeVisible();
+  
+  // Should see stores
+  await expect(page.getByText('SLC')).toBeVisible();
+  await expect(page.getByText('Provo')).toBeVisible();
+  await expect(page.getByText('Spanish Fork')).toBeVisible();
 });

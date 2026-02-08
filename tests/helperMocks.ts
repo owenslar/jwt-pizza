@@ -246,3 +246,34 @@ export async function mockCloseStore(page: Page) {
     }
   });
 }
+
+export async function mockGetAllFranchises(page: Page) {
+  await page.route('*/**/api/franchise?*', async (route) => {
+    if (route.request().method() === 'GET') {
+      const franchisesRes = {
+        franchises: [
+          {
+            id: 1,
+            name: 'pizzaPocket',
+            admins: [{ id: 3, name: 'pizza franchisee', email: 'f@jwt.com' }],
+            stores: [
+              { id: 1, name: 'SLC', totalRevenue: 0.123 },
+              { id: 2, name: 'Provo', totalRevenue: 0.234 },
+            ],
+          },
+          {
+            id: 2,
+            name: 'LotaPizza',
+            admins: [{ id: 4, name: 'lot franchisee', email: 'lot@jwt.com' }],
+            stores: [{ id: 3, name: 'Spanish Fork', totalRevenue: 0.056 }],
+          },
+        ],
+        more: false,
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: franchisesRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
