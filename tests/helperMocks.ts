@@ -306,3 +306,36 @@ export async function mockCloseFranchise(page: Page) {
     }
   });
 }
+
+export async function mockGetDocs(page: Page, docType: string = 'service') {
+  await page.route('*/**/api/docs', async (route) => {
+    if (route.request().method() === 'GET') {
+      const docsRes = {
+        version: '20220504',
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/order/menu',
+            description: 'Retrieve the list of available pizzas',
+            example: 'curl localhost:3000/api/order/menu',
+            response: [
+              { id: 1, title: 'Veggie', image: 'pizza1.png', price: 0.0038, description: 'A garden of delight' },
+            ],
+            requiresAuth: false,
+          },
+          {
+            method: 'POST',
+            path: '/api/order',
+            description: 'Create a new order',
+            example: 'curl -X POST localhost:3000/api/order',
+            response: { order: { id: 1 }, jwt: 'eyJhbGciOiJS...' },
+            requiresAuth: true,
+          },
+        ],
+      };
+      await route.fulfill({ json: docsRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
