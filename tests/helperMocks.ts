@@ -196,3 +196,25 @@ export async function mockGetOrders(page: Page) {
     }
   });
 }
+
+export async function mockGetFranchise(page: Page, userId: number = 3) {
+  await page.route(`*/**/api/franchise/${userId}`, async (route) => {
+    if (route.request().method() === 'GET') {
+      const franchiseRes = [
+        {
+          id: 1,
+          name: 'pizzaPocket',
+          admins: [{ id: 3, name: 'bob joe', email: 'bob@gmail.com' }],
+          stores: [
+            { id: 1, name: 'SLC', totalRevenue: 0.123 },
+            { id: 2, name: 'Provo', totalRevenue: 0.234 },
+          ],
+        },
+      ];
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: franchiseRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
