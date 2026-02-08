@@ -277,3 +277,32 @@ export async function mockGetAllFranchises(page: Page) {
     }
   });
 }
+
+export async function mockCreateFranchise(page: Page) {
+  await page.route('*/**/api/franchise', async (route) => {
+    if (route.request().method() === 'POST') {
+      const franchiseReq = route.request().postDataJSON();
+      const franchiseRes = {
+        id: 100,
+        name: franchiseReq.name,
+        admins: franchiseReq.admins,
+        stores: [],
+      };
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: franchiseRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+export async function mockCloseFranchise(page: Page) {
+  await page.route('*/**/api/franchise/*', async (route) => {
+    if (route.request().method() === 'DELETE' && !route.request().url().includes('/store')) {
+      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      await route.fulfill({ json: { message: 'franchise closed' } });
+    } else {
+      await route.fallback();
+    }
+  });
+}

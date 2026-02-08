@@ -5,6 +5,8 @@ import {
   mockCreateStore,
   mockCloseStore,
   mockGetAllFranchises,
+  mockCreateFranchise,
+  mockCloseFranchise
 } from './helperMocks';
 
 test('view franchise as diner with no franchise', async ({ page }) => {
@@ -140,4 +142,64 @@ test('view admin dashboard', async ({ page }) => {
   await expect(page.getByText('SLC')).toBeVisible();
   await expect(page.getByText('Provo')).toBeVisible();
   await expect(page.getByText('Spanish Fork')).toBeVisible();
+});
+
+test('create franchise as admin', async ({ page }) => {
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
+  await mockGetAllFranchises(page);
+  await mockCreateFranchise(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to admin page
+  await page.getByRole('link', { name: 'Admin' }).first().click();
+  
+  // Click create franchise button
+  await page.getByRole('button', { name: 'Add Franchise' }).click();
+  
+  // Fill in franchise details
+  await page.getByPlaceholder('franchise name').fill('New Franchise');
+  await page.getByPlaceholder('franchisee admin email').fill('newfranchisee@jwt.com');
+  
+  // Submit
+  await page.getByRole('button', { name: 'Create' }).click();
+  
+  // Should navigate back to admin dashboard
+  await expect(page.getByRole('heading', { name: 'Mama Ricci\'s kitchen' })).toBeVisible();
+});
+
+test('close franchise as admin', async ({ page }) => {
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
+  await mockGetAllFranchises(page);
+  await mockCloseFranchise(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to admin page
+  await page.getByRole('link', { name: 'Admin' }).first().click();
+  
+  // Click close button for a franchise
+  await page.getByRole('button', { name: 'Close' }).first().click();
+  
+  // Should see confirmation page
+  await expect(page.getByText('Are you sure you want to close the')).toBeVisible();
+  await expect(page.getByText('pizzaPocket')).toBeVisible();
+  
+  // Confirm close
+  await page.getByRole('button', { name: 'Close' }).click();
+  
+  // Should navigate back to admin dashboard
+  await expect(page.getByRole('heading', { name: 'Mama Ricci\'s kitchen' })).toBeVisible();
 });
