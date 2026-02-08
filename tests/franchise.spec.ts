@@ -203,3 +203,33 @@ test('close franchise as admin', async ({ page }) => {
   // Should navigate back to admin dashboard
   await expect(page.getByRole('heading', { name: 'Mama Ricci\'s kitchen' })).toBeVisible();
 });
+
+test('close store as admin', async ({ page }) => {
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
+  await mockGetAllFranchises(page);
+  await mockCloseStore(page);
+
+  await page.goto('http://localhost:5173/');
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to admin page
+  await page.getByRole('link', { name: 'Admin' }).first().click();
+  
+  // Click close button for a store (not franchise)
+  await page.getByRole('row', { name: /SLC/ }).getByRole('button', { name: 'Close' }).click();
+  
+  // Should see confirmation page
+  await expect(page.getByText('Are you sure you want to close')).toBeVisible();
+  await expect(page.getByText('SLC')).toBeVisible();
+  
+  // Confirm close
+  await page.getByRole('button', { name: 'Close' }).click();
+  
+  // Should navigate back to admin dashboard
+  await expect(page.getByRole('heading', { name: 'Mama Ricci\'s kitchen' })).toBeVisible();
+});
