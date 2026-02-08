@@ -36,3 +36,21 @@ test('view API documentation', async ({ page }) => {
   // Should see response examples
   await expect(page.getByText('Response', { exact: true }).first()).toBeVisible();
 });
+
+test('view 404 not found page', async ({ page }) => {
+  await page.goto('http://localhost:5173/this-page-does-not-exist');
+  
+  // Should see not found page
+  await expect(page.getByRole('heading', { name: 'Oops' })).toBeVisible();
+  await expect(page.getByText('It looks like we have dropped a pizza on the floor')).toBeVisible();
+});
+
+test('order now button works on home page', async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+  
+  // Click order now button
+  await page.getByRole('button', { name: 'Order now' }).click();
+  
+  // Should navigate to menu page
+  await expect(page.getByText('Awesome is a click away')).toBeVisible();
+});
