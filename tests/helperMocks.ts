@@ -1,28 +1,48 @@
 import { expect } from 'playwright-test-coverage';
 import type { Page } from '@playwright/test';
 
-export async function mockLogin(page: Page, email = 'bob@gmail.com', password = 'monkeypie', role = 'diner') {
+export async function mockLogin(
+  page: Page,
+  email = 'bob@gmail.com',
+  password = 'monkeypie',
+  role = 'diner',
+) {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'PUT') {
-      const loginReq = { email, password };
-      const loginRes = {
-        user: {
-          id: 3,
-          name: 'bob joe',
-          email,
-          roles: [{ role }],
-        },
-        token: 'abcdef',
-      };
-      expect(route.request().postDataJSON()).toMatchObject(loginReq);
-      await route.fulfill({ json: loginRes });
+      const requestData = route.request().postDataJSON();
+
+      // Check if credentials match - if so, return success, otherwise return 401
+      if (requestData.email === email && requestData.password === password) {
+        const loginRes = {
+          user: {
+            id: 3,
+            name: 'pizza diner',
+            email,
+            roles: [{ role }],
+          },
+          token: 'abcdef',
+        };
+        await route.fulfill({ json: loginRes });
+      } else {
+        // Wrong credentials - return 401 unauthorized
+        await route.fulfill({
+          status: 401,
+          json: { message: 'unauthorized' },
+        });
+      }
     } else {
       await route.fallback();
     }
   });
 }
 
-export async function mockRegister(page: Page, name = 'bob joe', email = 'bob@gmail.com', password = 'monkeypie', role = 'diner') {
+export async function mockRegister(
+  page: Page,
+  name = 'bob joe',
+  email = 'bob@gmail.com',
+  password = 'monkeypie',
+  role = 'diner',
+) {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'POST') {
       const loginReq = { name, email, password };
@@ -47,10 +67,34 @@ export async function mockLogout(page: Page) {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'DELETE') {
       const loginRes = {
-        message: "logout successful",
+        message: 'logout successful',
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: loginRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+export async function mockUpdateUser(page: Page) {
+  await page.route('*/**/api/user/*', async (route) => {
+    const url = route.request().url();
+    if (route.request().method() === 'PUT' && url.includes('/api/user/')) {
+      const updateReq = route.request().postDataJSON();
+      const userId = parseInt(url.split('/api/user/')[1]);
+      const updateRes = {
+        user: {
+          id: userId,
+          name: updateReq.name,
+          email: updateReq.email,
+          roles: updateReq.roles || [{ role: 'diner' }],
+        },
+        token: 'abcdef',
+      };
+      await route.fulfill({ json: updateRes });
     } else {
       await route.fallback();
     }
@@ -61,9 +105,27 @@ export async function mockGetMenu(page: Page) {
   await page.route('*/**/api/order/menu', async (route) => {
     if (route.request().method() === 'GET') {
       const menuRes = [
-        { id: 1, title: 'Veggie', image: 'pizza1.png', price: 0.0038, description: 'A garden of delight' },
-        { id: 2, title: 'Pepperoni', image: 'pizza2.png', price: 0.0042, description: 'Spicy treat' },
-        { id: 3, title: 'Margarita', image: 'pizza3.png', price: 0.0035, description: 'Essential classic' },
+        {
+          id: 1,
+          title: 'Veggie',
+          image: 'pizza1.png',
+          price: 0.0038,
+          description: 'A garden of delight',
+        },
+        {
+          id: 2,
+          title: 'Pepperoni',
+          image: 'pizza2.png',
+          price: 0.0042,
+          description: 'Spicy treat',
+        },
+        {
+          id: 3,
+          title: 'Margarita',
+          image: 'pizza3.png',
+          price: 0.0035,
+          description: 'Essential classic',
+        },
       ];
       await route.fulfill({ json: menuRes });
     } else {
@@ -129,7 +191,9 @@ export async function mockCreateOrder(page: Page) {
         },
         jwt: 'eyJpYXQ',
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: orderRes });
     } else {
       await route.fallback();
@@ -189,7 +253,9 @@ export async function mockGetOrders(page: Page) {
         ],
         page: 1,
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: ordersRes });
     } else {
       await route.fallback();
@@ -211,7 +277,9 @@ export async function mockGetFranchise(page: Page, userId: number = 3) {
           ],
         },
       ];
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: franchiseRes });
     } else {
       await route.fallback();
@@ -228,7 +296,9 @@ export async function mockCreateStore(page: Page) {
         name: storeReq.name,
         totalRevenue: 0,
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: storeRes });
     } else {
       await route.fallback();
@@ -239,7 +309,9 @@ export async function mockCreateStore(page: Page) {
 export async function mockCloseStore(page: Page) {
   await page.route('*/**/api/franchise/*/store/*', async (route) => {
     if (route.request().method() === 'DELETE') {
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: { message: 'store closed' } });
     } else {
       await route.fallback();
@@ -270,7 +342,9 @@ export async function mockGetAllFranchises(page: Page) {
         ],
         more: false,
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: franchisesRes });
     } else {
       await route.fallback();
@@ -288,7 +362,9 @@ export async function mockCreateFranchise(page: Page) {
         admins: franchiseReq.admins,
         stores: [],
       };
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: franchiseRes });
     } else {
       await route.fallback();
@@ -298,8 +374,13 @@ export async function mockCreateFranchise(page: Page) {
 
 export async function mockCloseFranchise(page: Page) {
   await page.route('*/**/api/franchise/*', async (route) => {
-    if (route.request().method() === 'DELETE' && !route.request().url().includes('/store')) {
-      expect(await route.request().headerValue('authorization')).toBe('Bearer abcdef');
+    if (
+      route.request().method() === 'DELETE' &&
+      !route.request().url().includes('/store')
+    ) {
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
       await route.fulfill({ json: { message: 'franchise closed' } });
     } else {
       await route.fallback();
@@ -319,7 +400,13 @@ export async function mockGetDocs(page: Page, docType: string = 'service') {
             description: 'Retrieve the list of available pizzas',
             example: 'curl localhost:3000/api/order/menu',
             response: [
-              { id: 1, title: 'Veggie', image: 'pizza1.png', price: 0.0038, description: 'A garden of delight' },
+              {
+                id: 1,
+                title: 'Veggie',
+                image: 'pizza1.png',
+                price: 0.0038,
+                description: 'A garden of delight',
+              },
             ],
             requiresAuth: false,
           },
