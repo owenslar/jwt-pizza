@@ -253,7 +253,6 @@ test('listUsersAsAdmin', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
-  await page.getByRole('textbox', { name: 'Password' }).click();
   await page.getByRole('textbox', { name: 'Password' }).fill('admin');
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('link', { name: 'Admin' }).click();
@@ -268,5 +267,22 @@ test('listUsersAsAdmin', async ({ page }) => {
 
   await expect(
     page.getByRole('cell', { name: 'a@jwt.com' }).first(),
+  ).toBeVisible();
+});
+
+test('filterUsersAsAdmin', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+
+  await page.getByRole('textbox', { name: 'Filter users' }).fill('Admin');
+  await page.getByRole('button', { name: 'Submit' }).first().click();
+
+  await expect(
+    page.getByRole('cell', { name: 'Admin', exact: true }),
   ).toBeVisible();
 });

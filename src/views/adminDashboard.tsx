@@ -36,18 +36,7 @@ export default function AdminDashboard(props: Props) {
   React.useEffect(() => {
     (async () => {
       setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, '*'));
-      // setUserList(await pizzaService.getUsers(userPage, 10, '*'));
-      setUserList({
-        users: [
-          {
-            name: 'Admin',
-            email: 'a@jwt.com',
-            id: 'admin123',
-            roles: [{ role: Role.Admin }, { role: Role.Diner }],
-          },
-        ],
-        more: false,
-      });
+      setUserList(await pizzaService.getUsers(userPage, 10, '*'));
     })();
   }, [props.user, franchisePage, userPage]);
 
@@ -79,28 +68,17 @@ export default function AdminDashboard(props: Props) {
   }
 
   async function filterUsers() {
-    // setUserPage(0);
-    // setUserList(
-    //   await pizzaService.getUsers(
-    //     userPage,
-    //     10,
-    //     `*${filterUserRef.current?.value}*`,
-    //   ),
-    // );
-    setUserList({
-      users: [
-        {
-          name: 'Admin User',
-          email: 'admin@example.com',
-          id: 'admin123',
-          roles: [{ role: Role.Admin }],
-        },
-      ],
-      more: false,
-    });
+    setUserPage(0);
+    setUserList(
+      await pizzaService.getUsers(
+        userPage,
+        10,
+        `*${filterUserRef.current?.value}*`,
+      ),
+    );
   }
 
-  async function closeUser(user: User) {}
+  async function deleteUser(user: User) {}
 
   let response = <NotFound />;
   if (Role.isRole(props.user, Role.Admin)) {
@@ -143,7 +121,9 @@ export default function AdminDashboard(props: Props) {
                                 {user.email}
                               </td>
                               <td className='text-start px-2 whitespace-nowrap text-sm font-normal text-gray-800'>
-                                {user.roles?.map((r) => r.role).join(', ')}
+                                {[
+                                  ...new Set(user.roles?.map((r) => r.role)),
+                                ].join(', ')}
                               </td>
                               <td className='text-start px-2 whitespace-nowrap text-l font-mono text-orange-600'>
                                 {user.id}
@@ -152,7 +132,7 @@ export default function AdminDashboard(props: Props) {
                                 <button
                                   type='button'
                                   className='px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400  hover:border-orange-800 hover:text-orange-800'
-                                  onClick={() => closeUser(user)}
+                                  onClick={() => deleteUser(user)}
                                 >
                                   <TrashIcon />
                                   Delete
@@ -167,15 +147,15 @@ export default function AdminDashboard(props: Props) {
                           <td className='px-1 py-1'>
                             <input
                               type='text'
-                              ref={filterFranchiseRef}
-                              name='filterFranchise'
+                              ref={filterUserRef}
+                              name='filterUser'
                               placeholder='Filter users'
                               className='px-2 py-1 text-sm border border-gray-300 rounded-lg'
                             />
                             <button
                               type='submit'
                               className='ml-2 px-2 py-1 text-sm font-semibold rounded-lg border border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800'
-                              onClick={filterFranchises}
+                              onClick={filterUsers}
                             >
                               Submit
                             </button>
@@ -186,19 +166,15 @@ export default function AdminDashboard(props: Props) {
                           >
                             <button
                               className='w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300 '
-                              onClick={() =>
-                                setFranchisePage(franchisePage - 1)
-                              }
-                              disabled={franchisePage <= 0}
+                              onClick={() => setUserPage(userPage - 1)}
+                              disabled={userPage <= 0}
                             >
                               «
                             </button>
                             <button
                               className='w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300'
-                              onClick={() =>
-                                setFranchisePage(franchisePage + 1)
-                              }
-                              disabled={!franchiseList.more}
+                              onClick={() => setUserPage(userPage + 1)}
+                              disabled={!userList.more}
                             >
                               »
                             </button>
