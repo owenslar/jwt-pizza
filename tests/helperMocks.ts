@@ -6,6 +6,7 @@ export async function mockLogin(
   email = 'bob@gmail.com',
   password = 'monkeypie',
   role = 'diner',
+  name = 'bob joe',
 ) {
   await page.route('*/**/api/auth', async (route) => {
     if (route.request().method() === 'PUT') {
@@ -16,7 +17,7 @@ export async function mockLogin(
         const loginRes = {
           user: {
             id: 3,
-            name: 'pizza diner',
+            name,
             email,
             roles: [{ role }],
           },

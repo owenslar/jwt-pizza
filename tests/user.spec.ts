@@ -15,7 +15,7 @@ test('updateUser', async ({ page }) => {
   await mockUpdateUser(page);
   await mockGetOrders(page);
   await mockLogout(page);
-  await mockLogin(page, email, 'diner', 'diner');
+  await mockLogin(page, email, 'diner', 'diner', 'pizza diner');
 
   await page.goto('/');
   await page.getByRole('link', { name: 'Register' }).click();
@@ -46,7 +46,7 @@ test('updatePassword', async ({ page }) => {
   await mockUpdateUser(page);
   await mockGetOrders(page);
   await mockLogout(page);
-  await mockLogin(page, email, newPassword, 'diner');
+  await mockLogin(page, email, newPassword, 'diner', 'pizza diner');
 
   // Register a new user
   await page.goto('/');
@@ -103,7 +103,7 @@ test('updateEmail', async ({ page }) => {
   await mockUpdateUser(page);
   await mockGetOrders(page);
   await mockLogout(page);
-  await mockLogin(page, newEmail, password, 'diner');
+  await mockLogin(page, newEmail, password, 'diner', 'pizza diner');
 
   // Register a new user
   await page.goto('/');
@@ -157,7 +157,7 @@ test('updateUserAsAdmin', async ({ page }) => {
   const email = `admin${Math.floor(Math.random() * 10000)}@jwt.com`;
 
   await mockGetUser(page);
-  await mockLogin(page, 'a@jwt.com', 'admin', 'admin');
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin', 'Admin');
   await mockUpdateUser(page);
   await mockGetOrders(page);
 
@@ -202,7 +202,13 @@ test('updateUserAsFranchisee', async ({ page }) => {
   const email = `franchisee${Math.floor(Math.random() * 10000)}@jwt.com`;
 
   await mockGetUser(page);
-  await mockLogin(page, 'f@jwt.com', 'franchisee', 'franchisee');
+  await mockLogin(
+    page,
+    'f@jwt.com',
+    'franchisee',
+    'franchisee',
+    'pizza franchisee',
+  );
   await mockUpdateUser(page);
   await mockGetOrders(page);
 
