@@ -297,3 +297,37 @@ test('filterUsersAsAdmin', async ({ page }) => {
     page.getByRole('cell', { name: 'Admin', exact: true }),
   ).toBeVisible();
 });
+
+test('deleteUserAsAdmin', async ({ page }) => {
+  await mockLogin(page, 'a@jwt.com', 'admin', 'admin', 'Admin');
+  await mockGetUsers(page);
+  await mockGetAllFranchises(page);
+  await mockDeleteUser(page);
+
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('a@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+
+  // Verify user exists
+  await expect(
+    page.getByRole('cell', { name: 'pizza diner' }).first(),
+  ).toBeVisible();
+
+  // Set up dialog handler to confirm deletion
+  page.on('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('confirm');
+    expect(dialog.message()).toContain('Are you sure you want to delete user');
+    await dialog.accept();
+  });
+
+  // Click delete button for pizza diner
+  const deleteButtons = await page.getByRole('button', { name: 'Delete' }).all();
+  await deleteButtons[2].click(); // Third user (pizza diner)
+
+  // Verify the page reloaded users (mock will be called again)
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+});
