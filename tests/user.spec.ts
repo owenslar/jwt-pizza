@@ -263,4 +263,10 @@ test('listUsersAsAdmin', async ({ page }) => {
   await expect(
     page.getByRole('textbox', { name: 'Filter users' }),
   ).toBeVisible();
+
+  await expect(page.getByRole('cell', { name: 'Admin' }).first()).toBeVisible();
+
+  await expect(
+    page.getByRole('cell', { name: 'a@jwt.com' }).first(),
+  ).toBeVisible();
 });

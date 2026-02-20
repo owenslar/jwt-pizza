@@ -10,6 +10,7 @@ import {
   Role,
   Store,
   User,
+  UserList,
 } from '../service/pizzaService';
 import { TrashIcon } from '../icons';
 
@@ -25,12 +26,30 @@ export default function AdminDashboard(props: Props) {
   });
   const [franchisePage, setFranchisePage] = React.useState(0);
   const filterFranchiseRef = React.useRef<HTMLInputElement>(null);
+  const [userList, setUserList] = React.useState<UserList>({
+    users: [],
+    more: false,
+  });
+  const [userPage, setUserPage] = React.useState(0);
+  const filterUserRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     (async () => {
       setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, '*'));
+      // setUserList(await pizzaService.getUsers(userPage, 10, '*'));
+      setUserList({
+        users: [
+          {
+            name: 'Admin',
+            email: 'a@jwt.com',
+            id: 'admin123',
+            roles: [{ role: Role.Admin }, { role: Role.Diner }],
+          },
+        ],
+        more: false,
+      });
     })();
-  }, [props.user, franchisePage]);
+  }, [props.user, franchisePage, userPage]);
 
   function createFranchise() {
     navigate('/admin-dashboard/create-franchise');
@@ -49,6 +68,7 @@ export default function AdminDashboard(props: Props) {
   }
 
   async function filterFranchises() {
+    // setFranchisePage(0);
     setFranchiseList(
       await pizzaService.getFranchises(
         franchisePage,
@@ -57,6 +77,30 @@ export default function AdminDashboard(props: Props) {
       ),
     );
   }
+
+  async function filterUsers() {
+    // setUserPage(0);
+    // setUserList(
+    //   await pizzaService.getUsers(
+    //     userPage,
+    //     10,
+    //     `*${filterUserRef.current?.value}*`,
+    //   ),
+    // );
+    setUserList({
+      users: [
+        {
+          name: 'Admin User',
+          email: 'admin@example.com',
+          id: 'admin123',
+          roles: [{ role: Role.Admin }],
+        },
+      ],
+      more: false,
+    });
+  }
+
+  async function closeUser(user: User) {}
 
   let response = <NotFound />;
   if (Role.isRole(props.user, Role.Admin)) {
@@ -85,63 +129,36 @@ export default function AdminDashboard(props: Props) {
                           )}
                         </tr>
                       </thead>
-                      {franchiseList.franchises.map((franchise, findex) => {
+                      {userList.users.map((user, index) => {
                         return (
                           <tbody
-                            key={findex}
+                            key={index}
                             className='divide-y divide-gray-200'
                           >
                             <tr className='border-neutral-500 border-t-2'>
                               <td className='text-start px-2 whitespace-nowrap text-l font-mono text-orange-600'>
-                                {franchise.name}
+                                {user.name}
                               </td>
-                              <td
-                                className='text-start px-2 whitespace-nowrap text-sm font-normal text-gray-800'
-                                colSpan={3}
-                              >
-                                {franchise.admins
-                                  ?.map((o) => o.name)
-                                  .join(', ')}
+                              <td className='text-start px-2 whitespace-nowrap text-l font-mono text-orange-600'>
+                                {user.email}
+                              </td>
+                              <td className='text-start px-2 whitespace-nowrap text-sm font-normal text-gray-800'>
+                                {user.roles?.map((r) => r.role).join(', ')}
+                              </td>
+                              <td className='text-start px-2 whitespace-nowrap text-l font-mono text-orange-600'>
+                                {user.id}
                               </td>
                               <td className='px-6 py-1 whitespace-nowrap text-end text-sm font-medium'>
                                 <button
                                   type='button'
                                   className='px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400  hover:border-orange-800 hover:text-orange-800'
-                                  onClick={() => closeFranchise(franchise)}
+                                  onClick={() => closeUser(user)}
                                 >
                                   <TrashIcon />
-                                  Close
+                                  Delete
                                 </button>
                               </td>
                             </tr>
-
-                            {franchise.stores.map((store, sindex) => {
-                              return (
-                                <tr key={sindex} className='bg-neutral-100'>
-                                  <td
-                                    className='text-end px-2 whitespace-nowrap text-sm text-gray-800'
-                                    colSpan={3}
-                                  >
-                                    {store.name}
-                                  </td>
-                                  <td className='text-end px-2 whitespace-nowrap text-sm text-gray-800'>
-                                    {store.totalRevenue?.toLocaleString()} ₿
-                                  </td>
-                                  <td className='px-6 py-1 whitespace-nowrap text-end text-sm font-medium'>
-                                    <button
-                                      type='button'
-                                      className='px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800'
-                                      onClick={() =>
-                                        closeStore(franchise, store)
-                                      }
-                                    >
-                                      <TrashIcon />
-                                      Close
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
                           </tbody>
                         );
                       })}
