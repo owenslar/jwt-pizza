@@ -31,14 +31,15 @@ export default function AdminDashboard(props: Props) {
     more: false,
   });
   const [userPage, setUserPage] = React.useState(0);
+  const [userFilter, setUserFilter] = React.useState('*');
   const filterUserRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     (async () => {
       setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, '*'));
-      setUserList(await pizzaService.getUsers(userPage, 10, '*'));
+      setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
     })();
-  }, [props.user, franchisePage, userPage]);
+  }, [props.user, franchisePage, userPage, userFilter]);
 
   function createFranchise() {
     navigate('/admin-dashboard/create-franchise');
@@ -57,7 +58,6 @@ export default function AdminDashboard(props: Props) {
   }
 
   async function filterFranchises() {
-    // setFranchisePage(0);
     setFranchiseList(
       await pizzaService.getFranchises(
         franchisePage,
@@ -69,16 +69,19 @@ export default function AdminDashboard(props: Props) {
 
   async function filterUsers() {
     setUserPage(0);
-    setUserList(
-      await pizzaService.getUsers(
-        userPage,
-        10,
-        `*${filterUserRef.current?.value}*`,
-      ),
-    );
+    setUserFilter(`*${filterUserRef.current?.value}*`);
   }
 
-  async function deleteUser(user: User) {}
+  async function deleteUser(user: User) {
+    const confirmed = confirm(
+      `Are you sure you want to delete user "${user.name}"? This action cannot be undone.`,
+    );
+
+    if (confirmed) {
+      await pizzaService.deleteUser(user);
+      setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+    }
+  }
 
   let response = <NotFound />;
   if (Role.isRole(props.user, Role.Admin)) {
