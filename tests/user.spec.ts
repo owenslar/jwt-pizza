@@ -8,6 +8,7 @@ import {
   mockGetUser,
   mockGetUsers,
   mockDeleteUser,
+  mockGetAllFranchises,
 } from './helperMocks';
 
 test('updateUser', async ({ page }) => {
@@ -254,6 +255,7 @@ test('updateUserAsFranchisee', async ({ page }) => {
 test('listUsersAsAdmin', async ({ page }) => {
   await mockLogin(page, 'a@jwt.com', 'admin', 'admin', 'Admin');
   await mockGetUsers(page);
+  await mockGetAllFranchises(page);
 
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
@@ -278,6 +280,7 @@ test('listUsersAsAdmin', async ({ page }) => {
 test('filterUsersAsAdmin', async ({ page }) => {
   await mockLogin(page, 'a@jwt.com', 'admin', 'admin', 'Admin');
   await mockGetUsers(page);
+  await mockGetAllFranchises(page);
 
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
