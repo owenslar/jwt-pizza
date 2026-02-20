@@ -389,6 +389,70 @@ export async function mockCloseFranchise(page: Page) {
   });
 }
 
+export async function mockGetUsers(page: Page) {
+  await page.route('*/**/api/user?*', async (route) => {
+    if (route.request().method() === 'GET') {
+      const url = new URL(route.request().url());
+      const filter = url.searchParams.get('filter') || '*';
+      
+      let users = [
+        {
+          id: 1,
+          name: 'Admin',
+          email: 'a@jwt.com',
+          roles: [{ role: 'admin' }],
+        },
+        {
+          id: 2,
+          name: 'pizza franchisee',
+          email: 'f@jwt.com',
+          roles: [{ role: 'franchisee' }],
+        },
+        {
+          id: 3,
+          name: 'pizza diner',
+          email: 'd@jwt.com',
+          roles: [{ role: 'diner' }],
+        },
+      ];
+
+      // Apply filter if not wildcard
+      if (filter !== '*') {
+        const filterText = filter.replace(/\*/g, '').toLowerCase();
+        users = users.filter(
+          (user) =>
+            user.name.toLowerCase().includes(filterText) ||
+            user.email.toLowerCase().includes(filterText)
+        );
+      }
+
+      const usersRes = {
+        users,
+        more: false,
+      };
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
+      await route.fulfill({ json: usersRes });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
+export async function mockDeleteUser(page: Page) {
+  await page.route('*/**/api/user/*', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      expect(await route.request().headerValue('authorization')).toBe(
+        'Bearer abcdef',
+      );
+      await route.fulfill({ json: { message: 'user deleted' } });
+    } else {
+      await route.fallback();
+    }
+  });
+}
+
 export async function mockGetDocs(page: Page, docType: string = 'service') {
   await page.route('*/**/api/docs', async (route) => {
     if (route.request().method() === 'GET') {
