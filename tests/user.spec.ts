@@ -259,7 +259,7 @@ test('listUsersAsAdmin', async ({ page }) => {
   await page.getByRole('link', { name: 'Admin' }).click();
   await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
 
-  await page.getByRole('columnheader', { name: 'User', exact: true }).click();
+  await page.getByRole('columnheader', { name: 'Name', exact: true }).click();
   await expect(
     page.getByRole('textbox', { name: 'Filter users' }),
   ).toBeVisible();
